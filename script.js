@@ -21,32 +21,44 @@ function removeLoadingSpinner() {
 }
 
 // Get Quote from API
-async function getQuote() {
+function getQuote() {
   showLoadingSpinner()
+
   const proxyUrl = 'https://still-thicket-97199.herokuapp.com/'
   const apiUrl =
     'https://api.forismatic.com/api/1.0/?method=getQuote&lang=en&format=json'
-  try {
-    const response = await fetch(proxyUrl + apiUrl)
-    const data = await response.json()
-    // if Author is blank, add 'Unknown'
-    if (data.quoteAuthor === '') {
-      authorText.innerText = 'Unknown'
-    } else {
-      authorText.innerHTML = data.quoteAuthor
+  let errorCounter = 0
+  async function get() {
+    try {
+      const response = await fetch(proxyUrl + apiUrl)
+      const data = await response.json()
+      // if Author is blank, add 'Unknown'
+      if (data.quoteAuthor === '') {
+        authorText.innerText = 'Unknown'
+      } else {
+        authorText.innerHTML = data.quoteAuthor
+      }
+      // Reduce font size for long quotes
+      if (data.quoteText.length > 120) {
+        quoteText.classList.add('long-quote')
+      } else {
+        quoteText.classList.remove('long-quote')
+      }
+      quoteText.innerHTML = data.quoteText
+      // Stop Loader, Show the quote
+      removeLoadingSpinner()
+     
+    } catch (error) {
+      //Stop execution if more than 10 errors
+      errorCounter++
+      if (errorCounter < 10) {
+        get()
+      } else {
+        console.log(error)
+      }
     }
-    // Reduce font size for long quotes
-    if (data.quoteText.length > 120) {
-      quoteText.classList.add('long-quote')
-    } else {
-      quoteText.classList.remove('long-quote')
-    }
-    quoteText.innerHTML = data.quoteText
-    // Stop Loader, Show the quote
-    removeLoadingSpinner()
-  } catch (error) {
-    getQuote()
   }
+  get()
 }
 
 //Tweet Quote
